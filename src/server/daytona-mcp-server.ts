@@ -1,6 +1,5 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { Daytona, Sandbox } from '@daytonaio/sdk';
-import { z } from 'zod';
 import { DaytonaMcpServerOptions, SandboxCacheItem } from '../types.js';
 import { DEFAULT_CACHE_TTL, RESOURCE_URIS, SANDBOX_TOOLS, PROCESS_TOOLS, FILE_TOOLS, GIT_TOOLS } from '../constants.js';
 import { registerSandboxTools } from './tools/sandbox-tools.js';
@@ -38,11 +37,9 @@ export class DaytonaMcpServer extends Server {
     this.cacheTtl = options.cacheTtl ?? DEFAULT_CACHE_TTL;
     this.verbose = options.verbose ?? false;
 
-    // Register resources
-    this.registerResources();
-    
-    // Register tools
-    this.registerTools();
+    // Register resources and tools
+    this.setupResources();
+    this.setupTools();
   }
 
   /**
@@ -94,9 +91,9 @@ export class DaytonaMcpServer extends Server {
   }
 
   /**
-   * Register MCP resources
+   * Set up MCP resources
    */
-  private registerResources(): void {
+  private setupResources(): void {
     this.log('Registering MCP resources');
     
     // Register the sandboxes list resource
@@ -196,9 +193,9 @@ export class DaytonaMcpServer extends Server {
   }
 
   /**
-   * Register MCP tools
+   * Set up MCP tools
    */
-  private registerTools(): void {
+  private setupTools(): void {
     this.log('Registering MCP tools');
     
     // Register sandbox management tools
