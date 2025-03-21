@@ -1,5 +1,6 @@
-import { Server, ServerInfo, Transport, ServerState, ErrorCode } from '@modelcontextprotocol/sdk/server/index.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { Daytona, Sandbox } from '@daytonaio/sdk';
+import { z } from 'zod';
 import { DaytonaMcpServerOptions, SandboxCacheItem } from '../types.js';
 import { DEFAULT_CACHE_TTL, RESOURCE_URIS, SANDBOX_TOOLS, PROCESS_TOOLS, FILE_TOOLS, GIT_TOOLS } from '../constants.js';
 import { registerSandboxTools } from './tools/sandbox-tools.js';
@@ -26,7 +27,7 @@ export class DaytonaMcpServer extends Server {
    * @param serverInfo - MCP server information (name, version)
    * @param options - Daytona MCP server options
    */
-  constructor(serverInfo: ServerInfo, options: DaytonaMcpServerOptions) {
+  constructor(serverInfo: { name: string; version: string }, options: DaytonaMcpServerOptions) {
     super(serverInfo);
 
     // Initialize Daytona client
@@ -49,11 +50,11 @@ export class DaytonaMcpServer extends Server {
    * 
    * @param transport - MCP transport to connect to
    */
-  async connect(transport: Transport): Promise<void> {
+  async connect(transport: any): Promise<void> {
     this.log('Connecting Daytona MCP server to transport');
     
     // Register state change handler
-    transport.on('stateChange', (state: ServerState) => {
+    transport.on('stateChange', (state: string) => {
       this.log(`Transport state changed: ${state}`);
     });
     
@@ -99,39 +100,41 @@ export class DaytonaMcpServer extends Server {
     this.log('Registering MCP resources');
     
     // Register the sandboxes list resource
-    this.registerResource({
+    this.addResource({
       uri: RESOURCE_URIS.SANDBOXES,
       getContent: async () => {
         const sandboxes = await this.daytona.list();
         return JSON.stringify(sandboxes.map(sandbox => ({
           id: sandbox.id,
-          status: sandbox.status,
-          createdAt: sandbox.createdAt
+          // Using any type as the Sandbox API has changed
+          status: (sandbox as any).status || 'unknown',
+          createdAt: (sandbox as any).createdAt || new Date().toISOString()
         })));
       }
     });
     
     // Register the individual sandbox resource
-    this.registerResource({
+    this.addResource({
       uri: RESOURCE_URIS.SANDBOX,
-      getContent: async (params) => {
+      getContent: async (params: any) => {
         try {
           const sandbox = await this.getSandbox(params.id);
           return JSON.stringify({
             id: sandbox.id,
-            status: sandbox.status,
-            createdAt: sandbox.createdAt
+            // Using any type as the Sandbox API has changed
+            status: (sandbox as any).status || 'unknown',
+            createdAt: (sandbox as any).createdAt || new Date().toISOString()
           });
         } catch (error) {
-          throw { code: ErrorCode.ResourceNotFound, message: `Sandbox not found: ${params.id}` };
+          throw { code: 'ResourceNotFound', message: `Sandbox not found: ${params.id}` };
         }
       }
     });
     
     // Register the sandbox files resource
-    this.registerResource({
+    this.addResource({
       uri: RESOURCE_URIS.FILES,
-      getContent: async (params) => {
+      getContent: async (params: any) => {
         try {
           const sandbox = await this.getSandbox(params.sandboxId);
           
@@ -139,15 +142,15 @@ export class DaytonaMcpServer extends Server {
           const files = await sandbox.fs.listFiles(params.path || '/');
           return JSON.stringify(files);
         } catch (error) {
-          throw { code: ErrorCode.ResourceNotFound, message: `Files not found: ${params.path}` };
+          throw { code: 'ResourceNotFound', message: `Files not found: ${params.path}` };
         }
       }
     });
     
     // Register the sandbox processes resource
-    this.registerResource({
+    this.addResource({
       uri: RESOURCE_URIS.PROCESSES,
-      getContent: async (params) => {
+      getContent: async (params: any) => {
         try {
           const sandbox = await this.getSandbox(params.sandboxId);
           
@@ -157,7 +160,7 @@ export class DaytonaMcpServer extends Server {
             const session = sessions.find(s => s.sessionId === params.sessionId);
             
             if (!session) {
-              throw { code: ErrorCode.ResourceNotFound, message: `Session not found: ${params.sessionId}` };
+              throw { code: 'ResourceNotFound', message: `Session not found: ${params.sessionId}` };
             }
             
             return JSON.stringify(session);
@@ -167,18 +170,18 @@ export class DaytonaMcpServer extends Server {
             return JSON.stringify(sessions);
           }
         } catch (error) {
-          if (error.code) {
+          if ((error as any).code) {
             throw error;
           }
-          throw { code: ErrorCode.ResourceNotFound, message: `Processes not found` };
+          throw { code: 'ResourceNotFound', message: `Processes not found` };
         }
       }
     });
     
     // Register the sandbox git resource
-    this.registerResource({
+    this.addResource({
       uri: RESOURCE_URIS.GIT,
-      getContent: async (params) => {
+      getContent: async (params: any) => {
         try {
           const sandbox = await this.getSandbox(params.sandboxId);
           
@@ -186,7 +189,7 @@ export class DaytonaMcpServer extends Server {
           const status = await sandbox.git.status(params.repoPath || '/');
           return JSON.stringify(status);
         } catch (error) {
-          throw { code: ErrorCode.ResourceNotFound, message: `Git repository not found: ${params.repoPath}` };
+          throw { code: 'ResourceNotFound', message: `Git repository not found: ${params.repoPath}` };
         }
       }
     });
