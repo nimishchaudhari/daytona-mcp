@@ -3,9 +3,15 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { z } from 'zod';
 
 // Get the directory name of the current module
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Define the response schema for API interactions
+const ContentSchema = z.object({
+  text: z.string()
+});
 
 /**
  * Example MCP client for testing the Daytona MCP server
@@ -25,8 +31,8 @@ async function main() {
 
     // Create a transport connected to the server's stdio
     const transport = new StdioClientTransport({
-      input: serverProcess.stdout,
-      output: serverProcess.stdin
+      stdin: serverProcess.stdin,
+      stdout: serverProcess.stdout
     });
 
     // Connect to the server
@@ -48,10 +54,10 @@ async function main() {
         name: 'list-sandboxes',
         arguments: {}
       }
-    });
+    }, ContentSchema);
 
     console.log('Existing sandboxes:');
-    console.log(listResult.content[0].text);
+    console.log(listResult.text);
 
     // More operations can be added here
 
