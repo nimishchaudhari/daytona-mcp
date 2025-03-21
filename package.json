@@ -1,0 +1,64 @@
+{
+  "name": "daytona-mcp",
+  "version": "0.1.0",
+  "description": "Model Context Protocol (MCP) integration for the Daytona SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist",
+    "lint": "eslint . --ext .ts",
+    "test": "jest",
+    "prepare": "npm run clean && npm run build",
+    "start:server": "node dist/server.js",
+    "start:client": "node dist/examples/client.js",
+    "example": "node dist/examples/example.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "keywords": [
+    "daytona",
+    "mcp",
+    "model-context-protocol",
+    "sdk",
+    "sandbox",
+    "llm",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nimishchaudhari/daytona-mcp.git"
+  },
+  "dependencies": {
+    "@daytonaio/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "zod": "^3.22.4"
+  },
+  "peerDependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.6",
+    "@types/node": "^18.18.6",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "eslint": "^8.52.0",
+    "jest": "^29.7.0",
+    "rimraf": "^5.0.5",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
