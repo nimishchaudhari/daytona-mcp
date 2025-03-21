@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { ErrorCode } from '@modelcontextprotocol/sdk/server/index.js';
 import { GIT_TOOLS } from '../../constants.js';
 import { DaytonaMcpServer } from '../daytona-mcp-server.js';
 
@@ -10,7 +9,7 @@ import { DaytonaMcpServer } from '../daytona-mcp-server.js';
  */
 export function registerGitTools(server: DaytonaMcpServer): void {
   // Tool: Clone a Git repository
-  server.registerTool({
+  server.addTool({
     name: GIT_TOOLS.CLONE_REPOSITORY,
     description: 'Clone a Git repository into a sandbox',
     parameters: z.object({
@@ -22,7 +21,7 @@ export function registerGitTools(server: DaytonaMcpServer): void {
       username: z.string().optional(),
       password: z.string().optional()
     }),
-    handler: async (params, context) => {
+    handler: async (params: any) => {
       try {
         const sandbox = await server.getSandbox(params.sandboxId);
         await sandbox.git.clone(
@@ -35,78 +34,69 @@ export function registerGitTools(server: DaytonaMcpServer): void {
         );
         
         return {
-          content: [{
-            mimeType: 'text/plain',
-            text: `Repository ${params.url} cloned successfully to ${params.path}`
-          }]
+          text: `Repository ${params.url} cloned successfully to ${params.path}`
         };
       } catch (error) {
         throw {
-          code: ErrorCode.InternalError,
-          message: `Failed to clone repository: ${error.message}`
+          code: 'InternalError',
+          message: `Failed to clone repository: ${(error as Error).message}`
         };
       }
     }
   });
 
   // Tool: Get Git repository status
-  server.registerTool({
+  server.addTool({
     name: GIT_TOOLS.GET_GIT_STATUS,
     description: 'Get Git repository status',
     parameters: z.object({
       sandboxId: z.string(),
       path: z.string()
     }),
-    handler: async (params, context) => {
+    handler: async (params: any) => {
       try {
         const sandbox = await server.getSandbox(params.sandboxId);
         const status = await sandbox.git.status(params.path);
         
         return {
-          content: [{
-            mimeType: 'application/json',
-            text: JSON.stringify(status)
-          }]
+          text: JSON.stringify(status)
         };
       } catch (error) {
         throw {
-          code: ErrorCode.InternalError,
-          message: `Failed to get Git status: ${error.message}`
+          code: 'InternalError',
+          message: `Failed to get Git status: ${(error as Error).message}`
         };
       }
     }
   });
 
   // Tool: List branches in a Git repository
-  server.registerTool({
+  server.addTool({
     name: GIT_TOOLS.LIST_BRANCHES,
     description: 'List branches in a Git repository',
     parameters: z.object({
       sandboxId: z.string(),
       path: z.string()
     }),
-    handler: async (params, context) => {
+    handler: async (params: any) => {
       try {
         const sandbox = await server.getSandbox(params.sandboxId);
         const branches = await sandbox.git.branches(params.path);
         
         return {
-          content: [{
-            mimeType: 'application/json',
-            text: JSON.stringify(branches)
-          }]
+          text: JSON.stringify(branches)
         };
       } catch (error) {
         throw {
-          code: ErrorCode.InternalError,
-          message: `Failed to list branches: ${error.message}`
+          code: 'InternalError',
+          message: `Failed to list branches: ${(error as Error).message}`
         };
       }
     }
   });
 
   // Tool: Stage files for commit
-  server.registerTool({
+  server.addTool({
     name: GIT_TOOLS.STAGE_FILES,
     description: 'Stage files for commit',
     parameters: z.object({
@@ -114,28 +104,25 @@ export function registerGitTools(server: DaytonaMcpServer): void {
       path: z.string(),
       files: z.array(z.string())
     }),
-    handler: async (params, context) => {
+    handler: async (params: any) => {
       try {
         const sandbox = await server.getSandbox(params.sandboxId);
         await sandbox.git.add(params.path, params.files);
         
         return {
-          content: [{
-            mimeType: 'text/plain',
-            text: `Files staged successfully`
-          }]
+          text: `Files staged successfully`
         };
       } catch (error) {
         throw {
-          code: ErrorCode.InternalError,
-          message: `Failed to stage files: ${error.message}`
+          code: 'InternalError',
+          message: `Failed to stage files: ${(error as Error).message}`
         };
       }
     }
   });
 
   // Tool: Commit staged changes
-  server.registerTool({
+  server.addTool({
     name: GIT_TOOLS.COMMIT_CHANGES,
     description: 'Commit staged changes',
     parameters: z.object({
@@ -145,7 +132,7 @@ export function registerGitTools(server: DaytonaMcpServer): void {
       author: z.string(),
       email: z.string()
     }),
-    handler: async (params, context) => {
+    handler: async (params: any) => {
       try {
         const sandbox = await server.getSandbox(params.sandboxId);
         await sandbox.git.commit(
@@ -156,22 +143,19 @@ export function registerGitTools(server: DaytonaMcpServer): void {
         );
         
         return {
-          content: [{
-            mimeType: 'text/plain',
-            text: `Changes committed successfully with message: "${params.message}"`
-          }]
+          text: `Changes committed successfully with message: "${params.message}"`
         };
       } catch (error) {
         throw {
-          code: ErrorCode.InternalError,
-          message: `Failed to commit changes: ${error.message}`
+          code: 'InternalError',
+          message: `Failed to commit changes: ${(error as Error).message}`
         };
       }
     }
   });
 
   // Tool: Pull changes from remote
-  server.registerTool({
+  server.addTool({
     name: GIT_TOOLS.PULL_CHANGES,
     description: 'Pull changes from a remote repository',
     parameters: z.object({
@@ -180,7 +164,7 @@ export function registerGitTools(server: DaytonaMcpServer): void {
       username: z.string().optional(),
       password: z.string().optional()
     }),
-    handler: async (params, context) => {
+    handler: async (params: any) => {
       try {
         const sandbox = await server.getSandbox(params.sandboxId);
         await sandbox.git.pull(
@@ -190,22 +174,19 @@ export function registerGitTools(server: DaytonaMcpServer): void {
         );
         
         return {
-          content: [{
-            mimeType: 'text/plain',
-            text: `Changes pulled successfully`
-          }]
+          text: `Changes pulled successfully`
         };
       } catch (error) {
         throw {
-          code: ErrorCode.InternalError,
-          message: `Failed to pull changes: ${error.message}`
+          code: 'InternalError',
+          message: `Failed to pull changes: ${(error as Error).message}`
         };
       }
     }
   });
 
   // Tool: Push changes to remote
-  server.registerTool({
+  server.addTool({
     name: GIT_TOOLS.PUSH_CHANGES,
     description: 'Push changes to a remote repository',
     parameters: z.object({
@@ -214,7 +195,7 @@ export function registerGitTools(server: DaytonaMcpServer): void {
       username: z.string().optional(),
       password: z.string().optional()
     }),
-    handler: async (params, context) => {
+    handler: async (params: any) => {
       try {
         const sandbox = await server.getSandbox(params.sandboxId);
         await sandbox.git.push(
@@ -224,15 +205,12 @@ export function registerGitTools(server: DaytonaMcpServer): void {
         );
         
         return {
-          content: [{
-            mimeType: 'text/plain',
-            text: `Changes pushed successfully`
-          }]
+          text: `Changes pushed successfully`
         };
       } catch (error) {
         throw {
-          code: ErrorCode.InternalError,
-          message: `Failed to push changes: ${error.message}`
+          code: 'InternalError',
+          message: `Failed to push changes: ${(error as Error).message}`
         };
       }
     }
