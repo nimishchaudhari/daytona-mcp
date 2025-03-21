@@ -1,6 +1,5 @@
-import { ServerInfo } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { Daytona, DaytonaConfig } from '@daytonaio/sdk';
+import { DaytonaConfig, CreateWorkspaceTargetEnum } from '@daytonaio/sdk';
 import { DaytonaMcpServer } from './daytona-mcp-server.js';
 import { DaytonaMcpServerOptions } from '../types.js';
 import { DEFAULTS } from '../constants.js';
@@ -13,7 +12,7 @@ import { DEFAULTS } from '../constants.js';
  * @returns Promise resolving to the created server instance
  */
 export async function createDaytonaStdioServer(
-  serverInfo: ServerInfo = { 
+  serverInfo: { name: string; version: string } = { 
     name: DEFAULTS.SERVER_NAME, 
     version: DEFAULTS.SERVER_VERSION 
   },
@@ -23,7 +22,7 @@ export async function createDaytonaStdioServer(
   const daytonaConfig: DaytonaConfig = {
     apiKey: options.daytonaConfig?.apiKey || process.env.DAYTONA_API_KEY || '',
     serverUrl: options.daytonaConfig?.serverUrl || process.env.DAYTONA_SERVER_URL || DEFAULTS.DAYTONA_SERVER_URL,
-    target: options.daytonaConfig?.target || process.env.DAYTONA_TARGET || DEFAULTS.DAYTONA_TARGET
+    target: (options.daytonaConfig?.target || process.env.DAYTONA_TARGET || DEFAULTS.DAYTONA_TARGET) as CreateWorkspaceTargetEnum
   };
 
   // Validate API key
