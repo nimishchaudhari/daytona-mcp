@@ -4,12 +4,18 @@ import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { z } from 'zod';
 
 // Load environment variables from .env file
 dotenv.config();
 
 // Get the directory name of the current module
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Define the response schema for API interactions
+const ContentSchema = z.object({
+  text: z.string()
+});
 
 // ANSI color codes for console output
 const RESET = '\x1b[0m';
@@ -64,8 +70,8 @@ async function main() {
     
     // Create a transport connected to the server's stdio
     const transport = new StdioClientTransport({
-      input: serverProcess.stdout,
-      output: serverProcess.stdin
+      stdin: serverProcess.stdin,
+      stdout: serverProcess.stdout
     });
     
     // Connect the client to the transport
@@ -90,9 +96,9 @@ async function main() {
         name: 'list-sandboxes',
         arguments: {}
       }
-    });
+    }, ContentSchema);
     
-    const existingSandboxes = JSON.parse(listResult.content[0].text);
+    const existingSandboxes = JSON.parse(listResult.text);
     log(`Found ${existingSandboxes.length} existing sandboxes`);
     
     // Step 2: Create a new sandbox
@@ -113,10 +119,10 @@ async function main() {
           }
         }
       }
-    });
+    }, ContentSchema);
     
     // Parse the sandbox ID from the result
-    const sandboxInfo = JSON.parse(createResult.content[0].text);
+    const sandboxInfo = JSON.parse(createResult.text);
     const sandboxId = sandboxInfo.id;
     
     log(`Created sandbox with ID: ${sandboxId}`, 'success');
@@ -132,7 +138,7 @@ async function main() {
           path: '/workspace/project'
         }
       }
-    });
+    }, ContentSchema);
     
     // Step 4: Execute a command in the sandbox
     log('Executing command in sandbox', 'info');
@@ -146,9 +152,9 @@ async function main() {
           cwd: '/workspace'
         }
       }
-    });
+    }, ContentSchema);
     
-    const execOutput = JSON.parse(execResult.content[0].text);
+    const execOutput = JSON.parse(execResult.text);
     log(`Command execution result: Exit code ${execOutput.exitCode}`);
     
     // Step 5: Run some TypeScript code directly
@@ -167,10 +173,10 @@ async function main() {
           `
         }
       }
-    });
+    }, ContentSchema);
     
     // Parse and display the code execution result
-    const codeOutput = JSON.parse(codeResult.content[0].text);
+    const codeOutput = JSON.parse(codeResult.text);
     log('Code execution result:', 'info');
     log(codeOutput.output);
     
@@ -185,9 +191,9 @@ async function main() {
           path: '/workspace/project'
         }
       }
-    });
+    }, ContentSchema);
     
-    const files = JSON.parse(filesResult.content[0].text);
+    const files = JSON.parse(filesResult.text);
     log(`Files in project directory: ${files.map((f: any) => f.name).join(', ')}`);
     
     // Step 7: Create a session for interactive commands
@@ -201,7 +207,7 @@ async function main() {
           sessionId: 'example-session'
         }
       }
-    });
+    }, ContentSchema);
     
     // Execute commands in the session
     log('Running commands in the session', 'info');
@@ -215,9 +221,9 @@ async function main() {
           command: 'cd /workspace/project && cat hello.txt'
         }
       }
-    });
+    }, ContentSchema);
     
-    const sessionOutput = JSON.parse(sessionCmdResult.content[0].text);
+    const sessionOutput = JSON.parse(sessionCmdResult.text);
     log(`Session command output: ${sessionOutput.output.trim()}`);
     
     // Step 8: Clone a Git repository (optional, will skip if authentication is required)
@@ -233,10 +239,10 @@ async function main() {
             path: '/workspace/project/repo'
           }
         }
-      });
+      }, ContentSchema);
       log('Repository cloned successfully', 'success');
     } catch (error) {
-      log(`Skipping Git operations: ${error.message}`, 'warning');
+      log(`Skipping Git operations: ${(error as Error).message}`, 'warning');
     }
     
     // Step 9: Find text in files
@@ -251,9 +257,9 @@ async function main() {
           pattern: 'Hello'
         }
       }
-    });
+    }, ContentSchema);
     
-    const findMatches = JSON.parse(findResult.content[0].text);
+    const findMatches = JSON.parse(findResult.text);
     log(`Found ${findMatches.length} matches for 'Hello'`);
     
     // Step 10: Delete the session
@@ -267,7 +273,7 @@ async function main() {
           sessionId: 'example-session'
         }
       }
-    });
+    }, ContentSchema);
     
     // Step 11: Clean up by removing the sandbox
     log('Cleaning up by removing the sandbox', 'warning');
@@ -279,7 +285,7 @@ async function main() {
           sandboxId
         }
       }
-    });
+    }, ContentSchema);
     
     log('Sandbox removed successfully', 'success');
     log('Example completed successfully', 'success');
