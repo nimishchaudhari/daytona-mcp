@@ -1,0 +1,7 @@
+[project]
+name = "daytona-mcp"
+description = "Model Context Protocol (MCP) integration for the Daytona SDK"
+
+[github]
+user = "nimishchaudhari"
+repo = "daytona-mcp"
